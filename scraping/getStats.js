@@ -3,7 +3,8 @@ var cheerio = require('cheerio');
 var mongodb = require('mongodb');
 var MongoClient = mongodb.MongoClient;
 var url = 'mongodb://localhost:27017/vb';
-
+var count = 0;
+var v = 0;
 function insertDoc(db, colName,data,cb) {
 	var collection = db.collection(colName);
 	collection.insert(data, function(err, res) {
@@ -85,7 +86,7 @@ function openStatURL(URL, name){
 									console.log('Inserted %d documents into the "Statistics" collection. The documents inserted with "_id" are:', result.length, result);
 								}
 							});
-							
+
 							statIDs.length++;
 							statIDs[idCount] = metadata._id;
 							//console.log(statIDs);
@@ -104,35 +105,30 @@ function openStatURL(URL, name){
 		});
 	});
 
-	return statIDs;
+	//return statIDs;
 }
-var name = "Russell, Aaron";
-var statIDs = openStatURL("stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1303431.0","Russell, Aaron");
-console.log(statIDs);
-//var mongodb = require('mongodb');
-//var MongoClient = mongodb.MongoClient;
-//var url = 'mongodb://localhost:27017/vb';
-//MongoClient.connect(url, function (err, db) {
-//if (err) {
-//console.log('Unable to connect to the mongoDB server. Error:', err);
-//} else {
-//console.log('Connection established to', url);
-////Get the documents collection
-//var collection = db.collection('Players');
-////Insert some users
-//collection.update({name: 'Russell, Aaron'}, {$set: {statistics: statIDs}}, function (err, numUpdated) {
-//if (err) {
-//console.log(err);
-//} else if (numUpdated) {
-//console.log('Updated Successfully %d document(s).', numUpdated);
-//} else {
-//console.log('No document found with defined "find" criteria!');
-//}
-////Close connection
-//db.close();
-//});
-//}
-//});
+MongoClient.connect(url, function connectDB(err, db) {
+	if (err) {
+		console.log('Unable to connect to the mongoDB server. Error:', err);
+	} else {
+		console.log('Connection established to', url);
+		var collection = db.collection('Players');
+		collection.find().each(function(err,docs){
+			if(err){
+				console.log(err);
+			}
+			else{
+				if(count < 100){
+					count++;
+					var name = docs.name;
+					var URL = docs.url;
+					openStatURL(URL,name);
+					db.close();
+				}
+			}
+		});
 
+	}
+});
 
 
