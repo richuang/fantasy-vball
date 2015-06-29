@@ -5,7 +5,11 @@ var MongoClient = mongodb.MongoClient;
 var url = 'mongodb://localhost:27017/vb';
 var count = 0;
 var v = 0;
+var parray = new Array(708);
+var purls = new Array(708);
+
 function getPlayerStatistics(URL, name, db){
+	v++;
 	var request = require('request');
 	var cheerio = require('cheerio');
 	console.log("Acquiring statistics for "+name+"... please wait.");
@@ -73,22 +77,23 @@ function getPlayerStatistics(URL, name, db){
 				MongoClient.connect(url, function (err, db) {
 					// do some work here with the database.
 					var coll = db.collection('Statistics');
-//					var stat = {
-//							name: statistics[0].name,
-//							stats: statistics
-//					};
-					//var stat = statistics;
+				//	var stat = {
+				//			name: statistics[0].name,
+				//			stats: statistics
+				//	};
+					var stat = statistics;
 					coll.insert(stat, function (err,result) {
 						if (err) {
 							console.log(err);
+							count++;
 						} else {
-							console.log(result);
+							console.log(result + " successfully inserted.");
+							count++;
 						}
 					});
 					db.close();
 //					}
 				});
-				v++;
 			}
 		}
 		else if(error)
@@ -98,26 +103,61 @@ function getPlayerStatistics(URL, name, db){
 	});
 }
 var names = new Array(0);
+
 MongoClient.connect(url, function connectDB(err, db) { //gets the players' names
 	if (err) {
 		console.log('Unable to connect to the mongoDB server. Error:', err);
 	} else {
 		console.log('Connection established to', url);
+
 		var collection = db.collection('Players');
-		collection.find().each(function(err,docs){
+		collection.find().each(function(err,docs,resume){
 			if(err){
 				console.log(err);
 			}
 			else{
-				if(count < 708){
-					count++;
-					var name = docs.name;
-					var URL = docs.url;
-					getPlayerStatistics(URL,name, db);
-					db.close();
+				if(count < 707){
+					var check = function(){
+						if(count < 707 && v === count) {
+							//if(db.isClosed){
+								//count++;
+							//}
+							var name = docs.name;
+							var URL = docs.url;
+
+							if(URL !== "stats.ncaa.orgundefined" &&
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1640983.0" && 
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1637538.0" &&
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1529417.0" &&
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1640862.0" &&
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1639344.0" &&
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1529776.0" &&
+									URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1640989.0"){//brandon lee, clay carr, kevin gear, langston payne, arturo iglesias, michael schreiber, connor drake
+							console.log(name+URL+count);
+							parray[count] = name;
+							purls[count] = URL;
+							getPlayerStatistics(URL,name, db);
+							}
+							else{
+								count++;
+								v++;
+								console.log("skipped "+name);
+							}
+							db.close();
+							//console.log(v+" "+count);
+						}
+						else {
+							setTimeout(check, 1);
+							//console.log(v+" "+count);
+						}
+					};
+					check();
+
+				}
+				else {
+					console.log("Finished loading stats!");
 				}
 			}
-
 		});
 
 	}
