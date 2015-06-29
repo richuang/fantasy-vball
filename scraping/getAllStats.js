@@ -16,7 +16,6 @@ function getPlayerStatistics(URL, name, db){
 		if (!error && response.statusCode === 200) {
 			var $ = cheerio.load(html);
 			var statistics = new Array(0);
-			console.log($("title").text().trim());
 			if($("title").text().trim() === "Game By Game Stats"){
 				$('td.smtext').each(function(i, element){
 					var a = $(this);
@@ -87,11 +86,6 @@ function getPlayerStatistics(URL, name, db){
 					});
 				}
 			}
-			else {
-				count++;
-				console.log("skipped "+name+" because broken link");
-				return;
-			}
 		}
 		else
 		{
@@ -114,9 +108,9 @@ MongoClient.connect(url, function connectDB(err, db) { //gets the players' names
 				console.log(err);
 			}
 			else{
-				if(count < 707){
+				if(count < 708){
 					var check = function(){
-						if(count < 707 && v === count) {
+						if(count < 708 && v === count) {
 							var name = docs.name;
 							var URL = docs.url;
 							if(URL !== "stats.ncaa.orgundefined"){ //&&
@@ -151,8 +145,10 @@ MongoClient.connect(url, function connectDB(err, db) { //gets the players' names
 					db.close();
 				}
 			}
+			db.close();
 		});
 
 	}
+
 });
 
