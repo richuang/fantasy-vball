@@ -8,6 +8,7 @@ var v = 0; //this counter iterates when the statistics are done being grabbed
 
 function getPlayerStatistics(URL, name, db){
 	v++;
+	var totScore = 0;
 	var request = require('request');
 	var cheerio = require('cheerio');
 	console.log("Acquiring statistics for "+name+"... please wait.");
@@ -37,6 +38,10 @@ function getPlayerStatistics(URL, name, db){
 						}
 					}
 					data[2] = data[2].trim();
+					for(var f = 3; f<18;f++)
+						data[f] = data[f].replace(/[^\d.-]/g, '');
+					if(data[4] === "1")
+						data[4] = "Started";
 					var metadata = {
 							name: name,
 							date: data[0],
@@ -65,6 +70,7 @@ function getPlayerStatistics(URL, name, db){
 						statistics.push(metadata);
 
 					}
+					totScore = totScore+Number(data[17]);
 					scount++;
 
 				});
@@ -82,6 +88,18 @@ function getPlayerStatistics(URL, name, db){
 								count++;
 							}
 						});
+						coll = db.collection('Players');
+						coll.findAndModify({name: name},
+								[],
+								{$set: {statistics: totScore}},
+								{},
+								function(err, object) {
+									if (err){
+										console.warn(err.message);  // returns error if no matching object found
+									}else{
+										console.dir(object);
+									}
+								});
 						db.close();
 					});
 				}
@@ -121,8 +139,8 @@ MongoClient.connect(url, function connectDB(err, db) { //gets the players' names
 //								URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1639344.0" &&
 //								URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1529776.0" &&
 //								URL !== "stats.ncaa.org/player?game_sport_year_ctl_id=12100&stats_player_seq=1640989.0"){//brandon lee, clay carr, kevin gear, langston payne, arturo iglesias, michael schreiber, connor drake
-								console.log(name+URL+count);
 								getPlayerStatistics(URL,name, db);
+								console.log(count);
 							}
 							else{
 								count++;
