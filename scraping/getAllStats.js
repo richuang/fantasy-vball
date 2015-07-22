@@ -9,6 +9,11 @@ var v = 0; //this counter iterates when the statistics are done being grabbed
 function getPlayerStatistics(URL, name, db){
 	v++;
 	var totScore = 0;
+	var passing = 0;
+	var blocking = 0;
+	var assists = 0;
+	var kills = 0;
+	var digs = 0;
 	var request = require('request');
 	var cheerio = require('cheerio');
 	console.log("Acquiring statistics for "+name+"... please wait.");
@@ -42,6 +47,7 @@ function getPlayerStatistics(URL, name, db){
 						data[f] = data[f].replace(/[^\d.-]/g, '');
 					if(data[4] === "1")
 						data[4] = "Started";
+					
 					var metadata = {
 							name: name,
 							date: data[0],
@@ -67,10 +73,14 @@ function getPlayerStatistics(URL, name, db){
 
 					if(scount%3===0) {
 						statistics.length = statistics.length++;
+						totScore = totScore+Number(data[17]);
+						passing = passing+Number(data[13]);
+						blocking = blocking + Number(data[14]) + Number(data[15]);
+						assists = assists+Number(data[9]);
+						kills = kills+Number(data[5]);
+						digs = digs+Number(data[12]);
 						statistics.push(metadata);
-
 					}
-					totScore = totScore+Number(data[17]);
 					scount++;
 
 				});
@@ -88,6 +98,7 @@ function getPlayerStatistics(URL, name, db){
 								count++;
 							}
 						});
+						console.log(count);
 						coll = db.collection('Players');
 						coll.findAndModify({name: name},
 								[],
@@ -100,6 +111,54 @@ function getPlayerStatistics(URL, name, db){
 										console.dir(object);
 									}
 								});
+						if(assists>200)
+							coll.findAndModify({name: name},
+									[],
+									{$set: {pos: "Setter"}},
+									{},
+									function(err, object) {
+										if (err){
+											console.warn(err.message);  // returns error if no matching object found
+										}else{
+											console.dir(object);
+										}
+									});
+						else if(kills>50 && passing>15)
+							coll.findAndModify({name: name},
+									[],
+									{$set: {pos: "Outside"}},
+									{},
+									function(err, object) {
+										if (err){
+											console.warn(err.message);  // returns error if no matching object found
+										}else{
+											console.dir(object);
+										}
+									});
+						else if(kills>50 && passing<15)
+							coll.findAndModify({name: name},
+									[],
+									{$set: {pos: "Middle/Opposite"}},
+									{},
+									function(err, object) {
+										if (err){
+											console.warn(err.message);  // returns error if no matching object found
+										}else{
+											console.dir(object);
+										}
+									});
+						else if(kills<50 && digs>50 && blocking<10)
+							coll.findAndModify({name: name},
+									[],
+									{$set: {pos: "Libero"}},
+									{},
+									function(err, object) {
+										if (err){
+											console.warn(err.message);  // returns error if no matching object found
+										}else{
+											console.dir(object);
+										}
+									});
 						db.close();
 					});
 				}

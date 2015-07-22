@@ -113,6 +113,7 @@ for(i=0;i<d1Schools.length;i++){
 								school_code: $('a').next().attr('href').slice(19,$('a').next().attr('href').search("&")),//window.location.href.slice(47),
 								url: "stats.ncaa.org"+a.children().attr('href'),
 								statistics: 0,
+								pos: ""
 						};
 						console.log(player);
 						//insert into db here
